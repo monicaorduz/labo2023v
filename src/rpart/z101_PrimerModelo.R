@@ -7,9 +7,11 @@ require("rpart")
 require("rpart.plot")
 
 #Aqui se debe poner la carpeta de la materia de SU computadora local
-setwd("X:\\gdrive\\austral2023v\\")  #Establezco el Working Directory
+getwd()
+setwd("C:/Users/jball/OneDrive/Documentos/Labo/")  #Establezco el Working Directory
 
 #cargo el dataset
+#En lugar de usar read.csv() o similares, puede usar fread() para cargar datos directamente en una data.table. La f significa rápido
 dataset  <- fread("./datasets/dataset_pequeno.csv")
 
 dtrain  <- dataset[ foto_mes==202107 ]  #defino donde voy a entrenar
