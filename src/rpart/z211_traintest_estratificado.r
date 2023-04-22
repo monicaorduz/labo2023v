@@ -21,7 +21,7 @@ particionar  <- function( data,  division, agrupa="",  campo="fold", start=1, se
 #------------------------------------------------------------------------------
 
 #Aqui se debe poner la carpeta de la computadora local
-setwd("X:\\gdrive\\austral2023v\\")   #Establezco el Working Directory
+setwd("C:/Users/jball/OneDrive/Documentos/Labo/")   #Establezco el Working Directory
 
 #cargo los datos
 dataset  <- fread("./datasets/dataset_pequeno.csv")
@@ -31,7 +31,7 @@ dataset  <- dataset[ clase_ternaria!= "" ]
 
 #particiono estratificadamente el dataset
 #Cambiar por la primer semilla de cada uno !
-particionar( dataset, division=c(7,3), agrupa="clase_ternaria", seed= 102191 )  #Cambiar por la primer semilla de cada uno !
+particionar( dataset, division=c(7,3), agrupa="clase_ternaria", seed= 545543)  #Cambiar por la primer semilla de cada uno !
 
 
 param_basicos  <- list( "cp"=         -1,  #complejidad minima
@@ -77,4 +77,14 @@ cat( "Estimulos: ", estimulos, "\n" )
 cat( "Aciertos (BAJA+2): ",  aciertos,  "\n" )
 
 cat( "Ganancia en testing (normalizada): ", ganancia_test_normalizada, "\n" )
+
+#Seed,   Ganancia en testing   Cambiando en línea 34, cinco semillas de números primos
+#114689, 58820000
+#333679, 57300000
+#274177, 48550000
+#514229, 52550000
+#545543, 53690000
+
+
+
 

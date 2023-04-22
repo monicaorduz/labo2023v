@@ -139,3 +139,10 @@ for( vmin_bucket  in  c( vmin_split/2, 20, 10, 5) )
 }
 }
 }
+
+
+#El Grid Search es algo que no se utiliza en la vida real , por más que hay penosos artículos de TowardsDataScience y Medium que hablan de él
+#Estamos viendo Grid Search simplemente como un paso pedagógico intermedio, con los for anidados, donde nos es muy importante generar un archivo con todas las salidas , donde el secreto va a ser ver ese archivo de salida como un dataset
+#Ese "dataset" ,. al mirarlo con ingenio, nos va a dar lugar a la "Optimización Bayesiana* , tema que veremos en la segunda mitad de la Clase 02, el proximo martes, y es totalmente superador al Grid Search.
+#Para hacer Bayesian Optimization utilizaremos dos librerías : DiceKriging* y mlrMBO**
+#incluso habrán fascículos de zero2hero que hablaran de los fundamentos de la Bayesian Optimization
