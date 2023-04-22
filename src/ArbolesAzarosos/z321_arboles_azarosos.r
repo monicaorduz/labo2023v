@@ -12,12 +12,12 @@ require("rpart")
 #parmatros experimento
 PARAM <- list()
 PARAM$experimento  <- 3210
-PARAM$semilla  <- 102191      #Establezco la semilla aleatoria, cambiar por SU primer semilla
+PARAM$semilla  <- 114389      #Establezco la semilla aleatoria, cambiar por SU primer semilla
 
 #parameetros rpart
 PARAM$rpart_param   <- list( "cp"=          -1,
-                              "minsplit"=  300,
-                              "minbucket"=  20,
+                              "minsplit"=  250,
+                              "minbucket"=  50,
                               "maxdepth"=   10 )
 
 #parametros  arbol
@@ -29,7 +29,7 @@ PARAM$num_trees_max  <- 500 #voy a generar 500 arboles, a mas arboles mas tiempo
 #------------------------------------------------------------------------------
 #Aqui comienza el programa
 
-setwd("X:\\gdrive\\austral2023v\\")  #Establezco el Working Directory
+setwd("C:/Users/jball/OneDrive/Documentos/Labo/")  #Establezco el Working Directory
 
 #cargo los datos
 dataset  <- fread("./datasets/dataset_pequeno.csv")
@@ -45,7 +45,7 @@ setwd( carpeta_experimento )
 
 
 #que tamanos de ensemble grabo a disco, pero siempre debo generar los 500
-grabar  <-  c( 1, 5, 10, 50, 100, 200, 500)
+grabar  <-  c( 1, 10, 20, 50, 100)
 
 
 #defino los dataset de entrenamiento y aplicacion
