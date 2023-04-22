@@ -1,6 +1,9 @@
 #esqueleto de grid search
 #se espera que los alumnos completen lo que falta para recorrer TODOS cuatro los hiperparametros 
 
+#Ver vídeo optimización de hiperparámetros en un árbol de decisión, algoritmo CART
+#Se debe optimizar los hiperparametros con 5-fold cross validation a través de rpart_params
+
 rm( list=ls() )  #Borro todos los objetos
 gc()   #Garbage Collection
 
@@ -8,7 +11,7 @@ require("data.table")
 require("rpart")
 require("parallel")
 
-ksemillas  <- c(102191, 200177, 410551, 552581, 892237) #reemplazar por las propias semillas
+ksemillas  <- c(114689, 274177, 333679, 514229, 8545543) #reemplazar por las propias semillas
 
 #------------------------------------------------------------------------------
 #particionar agrega una columna llamada fold a un dataset que consiste en una particion estratificada segun agrupa
@@ -75,7 +78,7 @@ ArbolesMontecarlo  <- function( semillas, param_basicos )
 #------------------------------------------------------------------------------
 
 #Aqui se debe poner la carpeta de la computadora local
-setwd("X:\\gdrive\\austral2023v\\")   #Establezco el Working Directory
+setwd("C:/Users/jball/OneDrive/Documentos/Labo/")   #Establezco el Working Directory
 #cargo los datos
 
 #cargo los datos
@@ -102,16 +105,23 @@ cat( file=archivo_salida,
 
 
 #itero por los loops anidados para cada hiperparametro
+#Entender que minbucket debe ser:  2 <= 2*minbucket <= minsplit <= #dataset
+#Entender que max_depth debe ser:   2 <= max_depth <= 30
+#Entender que -1 <= cp <= 0.1  (cp está entre -1 y 0.1)
 
+for( vcp  in  c( -0.6, -0.5, -0.4)  )
+{
 for( vmax_depth  in  c( 4, 6, 8, 10, 12, 14 )  )
 {
-for( vmin_split  in  c( 1000, 800, 600, 400, 200, 100, 50, 20, 10 )  )
+for( vmin_split  in  c( 800, 600, 400, 200, 100, 50, 20, 10)  )
+{
+for( vmin_bucket  in  c( vmin_split/2, 20, 10, 5) )
 {
 
   #notar como se agrega
-  param_basicos  <- list( "cp"=         -0.5,       #complejidad minima
+  param_basicos  <- list( "cp"=        vcp,       #complejidad minima
                           "minsplit"=  vmin_split,  #minima cantidad de registros en un nodo para hacer el split
-                          "minbucket"=  5,          #minima cantidad de registros en una hoja
+                          "minbucket"= vmin_bucket,          #minima cantidad de registros en una hoja  (prepoda)
                           "maxdepth"=  vmax_depth ) #profundidad máxima del arbol
 
   #Un solo llamado, con la semilla 17
@@ -125,5 +135,7 @@ for( vmin_split  in  c( 1000, 800, 600, 400, 200, 100, 50, 20, 10 )  )
         vmin_split, "\t",
         ganancia_promedio, "\n"  )
 
+}
+}
 }
 }
