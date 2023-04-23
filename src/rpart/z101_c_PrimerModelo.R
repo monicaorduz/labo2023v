@@ -22,9 +22,9 @@ modelo  <- rpart(formula=   "clase_ternaria ~ .",  #quiero predecir clase_ternar
                  data=      dtrain,  #los datos donde voy a entrenar
                  xval=      5,
                  cp=       -1,   #esto significa no limitar la complejidad de los splits
-                 minsplit=  475,     #minima cantidad de registros para que se haga el split
-                 minbucket= 30,     #tamaño minimo de una hoja
-                 maxdepth=  15 )    #profundidad maxima del arbol
+                 minsplit=  135,     #minima cantidad de registros para que se haga el split
+                 minbucket= 45,     #tamaño minimo de una hoja
+                 maxdepth=  7 )    #profundidad maxima del arbol
 
 
 #grafico el arbol
@@ -51,7 +51,12 @@ dir.create( "./exp/" )
 dir.create( "./exp/KA2001" )
 
 fwrite( dapply[ , list(numero_de_cliente, Predicted) ], #solo los campos para Kaggle
-        file= "./exp/KA2001/K101_011.csv",
+        file= "./exp/KA2001/K101_015.csv",
         sep=  "," )
+
+
+
+
+
 
 
