@@ -39,14 +39,14 @@ PARAM$input$dataset       <- "./datasets/dataset_pequeno.csv"
 PARAM$input$training      <- c( 202107 )  # los meses en los que vamos a entrenar
 
 PARAM$trainingstrategy$undersampling  <-  1.0    # un undersampling de 0.1  toma solo el 10% de los CONTINUA
-PARAM$trainingstrategy$semilla_azar   <- 102191  #Aqui poner su  primer  semilla
+PARAM$trainingstrategy$semilla_azar   <- 114689  #Aqui poner su  primer  semilla
 
 PARAM$hyperparametertuning$iteraciones <- 100
 PARAM$hyperparametertuning$xval_folds  <- 5
 PARAM$hyperparametertuning$POS_ganancia  <- 117000
 PARAM$hyperparametertuning$NEG_ganancia  <-  -3000
 
-PARAM$hyperparametertuning$semilla_azar  <- 200177  #Aqui poner su segunda semilla
+PARAM$hyperparametertuning$semilla_azar  <- 333679  #Aqui poner su segunda semilla
 
 #------------------------------------------------------------------------------
 
