@@ -6,7 +6,7 @@ require("data.table")
 require("rpart")
 require("rpart.plot")
 
-setwd("X:\\gdrive\\austral2023v\\" )  #establezco la carpeta donde voy a trabajar
+setwd("C:/Users/jball/OneDrive/Documentos/Labo/" )  #establezco la carpeta donde voy a trabajar
 
 #cargo el dataset
 dataset  <- fread( "./datasets/dataset_pequeno.csv")
@@ -57,4 +57,8 @@ fwrite( entrega, paste0( "stopping_at_canaritos.csv"), sep="," )
 pdf(file = "stopping_at_canaritos.pdf", width=28, height=4)
 prp(modelo_pruned, extra=101, digits=-5, branch=1, type=4, varlen=0, faclen=0)
 dev.off()
+pdf(file = "arbol_original.pdf", width=40, height=20)
+prp(modelo_original, extra=101, digits=-5, branch=1, type=4, varlen=0, faclen=0)
+dev.off()
+
 
