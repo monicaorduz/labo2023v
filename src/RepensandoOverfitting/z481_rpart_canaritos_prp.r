@@ -6,7 +6,7 @@ require("data.table")
 require("rpart")
 require("rpart.plot")
 
-setwd("X:\\gdrive\\austral2023v\\" )  #establezco la carpeta donde voy a trabajar
+setwd("C:/Users/jball/OneDrive/Documentos/Labo/" )  #establezco la carpeta donde voy a trabajar
 
 #cargo el dataset
 dataset  <- fread( "./datasets/dataset_pequeno.csv")
@@ -34,6 +34,6 @@ modelo  <- rpart(formula= "clase_ternaria ~ .",
 
 
 #Grabo el arbol de canaritos
-pdf(file = "./arbol_canaritos.pdf", width=28, height=4)
+pdf(file = "./arbol_canaritos2.pdf", width=28, height=4)
 prp(modelo, extra=101, digits=-5, branch=1, type=4, varlen=0, faclen=0)
 dev.off()
