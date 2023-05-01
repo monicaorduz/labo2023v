@@ -1,6 +1,6 @@
 
 
-set.seed( 102191 )
+set.seed( 114689)
 
 #calcula cuantos encestes logra un jugador con indice de enceste prob
 #haciendo qyt tiros libres
@@ -33,6 +33,5 @@ for( i in 1:10000 ){  #diez mil experimentos
   mejor  <- which.max( vaciertos )
   if( mejor == 1 )  primero_ganador  <- primero_ganador + 1
 }
-
 
 print(  primero_ganador )

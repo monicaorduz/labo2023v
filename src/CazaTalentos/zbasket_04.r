@@ -1,6 +1,6 @@
 
 
-set.seed( 102191 )
+set.seed( 114689)
 
 #calcula cuantos encestes logra un jugador con indice de enceste prob
 #que hace qyt tiros libres
@@ -14,7 +14,7 @@ ftirar  <- function( prob, qty ){
 jugadores  <- rep( 0.7, 100 )
 
 
-
+jugadores
 
 
 for( i in 1:10 ){
