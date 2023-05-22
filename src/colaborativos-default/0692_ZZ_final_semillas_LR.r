@@ -65,6 +65,30 @@ setwd(paste0( base_dir, "exp/", PARAM$experimento, "/"))   #Establezco el Workin
 
 write_yaml( PARAM, file= "parametros.yml" )   #escribo parametros utilizados
 
+
+## agrego a dataset_pred1  las columnas  mprestamos_totales y  umbral_prestamos
+#dataset_pred1[ dataset_grande,
+#                                  on = c("numero_de_cliente", "foto_mes"),
+#                                   c( "mprestamos_totales", "umbral_prestamos") := list( i.mprestamos_totales, i.umbral_prestamos) ]
+
+##ordeno por probabilidad descendente
+#setorder(  dataset_pred1,  -prob )  # ordeno por probabilidad descendente
+
+## marco todos en cero
+#dataset_pred1[  , Predicted := 0 ]
+
+## marco en 1 a los primeros 11000  , cambiar luego a gusto, ya está ordenado !
+#dataset_pred1[  1:11000,  Predicted := 1 ]
+
+##ahora viene el  "Engendro Marcela"  ,  donde decido NO enviar estimulo a los que deben mucho
+#dataset_pred1[  mprestamos_totales  >  3*umbrar_prestamos,  Predicted :=0 ]
+
+##finalmente, grabo a disco
+#fwrite( dataset_pred1[ , list( numero_de_cliente, Predicted ) ],
+#                file= "marcela_bola_de_cristal_11000.csv",
+#                sep= "," )
+
+
 #leo la salida de la optimizaciob bayesiana
 arch_log  <- paste0( base_dir, "exp/", PARAM$exp_input, "/BO_log.txt" )
 tb_log  <- fread( arch_log )
@@ -98,7 +122,7 @@ for( modelo_rank in  PARAM$modelos_rank )
   iteracion_bayesiana  <- parametros$iteracion_bayesiana
 
 
-  #creo CADA VEZ el dataset de lightgbm
+***  #creo CADA VEZ el dataset de lightgbm
   dtrain  <- lgb.Dataset( data=    data.matrix( dataset[ , campos_buenos, with= FALSE] ),
                           label=   dataset[ , clase01],
                           weight=  dataset[ , ifelse( clase_ternaria %in% c("BAJA+2"), 1.0000001, 1.0)],
@@ -148,11 +172,11 @@ for( modelo_rank in  PARAM$modelos_rank )
                                verbose= -100 )
 
     #grabo el modelo, achivo .model
-    lgb.save( modelo_final,
+    ***lgb.save( modelo_final,
               file= arch_modelo )
 
     #creo y grabo la importancia de variables
-    tb_importancia  <- as.data.table( lgb.importance( modelo_final ) )
+    ***tb_importancia  <- as.data.table( lgb.importance( modelo_final ) )
     fwrite( tb_importancia,
             file= paste0( "impo_",
                           nombre_raiz,
