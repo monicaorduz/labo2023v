@@ -54,7 +54,7 @@ PARAM$glm_basicos <- list(
 PARAM$glm_extras <- makeParamSet( 
          makeNumericParam("cost",    lower=    0.01, upper=     10),
          makeNumericParam("penaly", lower=    0.001, upper=     0.1),
-         makeIntegerParam("maxit", lower=  50L,   upper= 200L)
+         makeIntegerParam("maxit", lower=  50L,   upper= 200L),
          makeIntegerParam("k", lower = PARAM$glm_crossvalidation_folds, upper=10L)
 )
 
