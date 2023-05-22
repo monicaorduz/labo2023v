@@ -20,7 +20,7 @@ PARAM  <- list()
 PARAM$experimento  <- "ZZ6910"
 PARAM$exp_input  <- "HT6510"
 
-PARAM$modelos  <- 2       #aumentar si se quieren mas modelos
+PARAM$modelos  <- 2       #aumentar si se quieren mas modelos; se puede cambiar a 1 modelo para efectos de cargue de los archivos en kaggle sea un número menor
 PARAM$semilla  <- 114689  # siempre se debera probar con 5 semillas, en 5 experimentos distintos, y presentar la media y/o los graficos detallados de las cinco curvas si corresponde
 
 PARAM$envios_desde  <-  8000 #Estos parámetors es posible ajustarlos

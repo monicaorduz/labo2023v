@@ -1,5 +1,7 @@
 # Experimentos Colaborativos Default
 # Hyperparameter Tuning  lightgbm
+# Hyperparameter Tuning  glm regresión logísitica
+#ver https://rpubs.com/AdSan-R/Rlog_NB_ChurnBank
 
 #Necesita para correr en Google Cloud
 # 128 GB de memoria RAM
@@ -36,56 +38,68 @@ PARAM$experimento <- "HT06510"
 
 PARAM$exp_input  <- "TS6410"
 
-PARAM$lgb_crossvalidation_folds  <- 5  #En caso que se haga cross validation, se usa esta cantidad de folds
+#PARAM$lgb_crossvalidation_folds  <- 5  #En caso que se haga cross validation, se usa esta cantidad de folds
+PARAM$glm_crossvalidation_folds  <- 5  #En caso que se haga cross validation, se usa esta cantidad de folds
 
-PARAM$lgb_semilla  <- 114689   #cambiar por su propia semilla
+#PARAM$lgb_semilla  <- 114689   #cambiar por su propia semilla
+PARAM$glm_semilla  <- 114689   #cambiar por su propia semilla
 
 
-#Hiperparametros FIJOS de  lightgbm
-PARAM$lgb_basicos <- list( 
-   boosting= "gbdt",               #puede ir  dart  , ni pruebe random_forest
-   objective= "binary",
-   metric= "custom",
-   first_metric_only= TRUE,
-   boost_from_average= TRUE,
-   feature_pre_filter= FALSE,
-   force_row_wise= TRUE,           #para que los alumnos no se atemoricen con tantos warning
-   verbosity= -100,
-   max_depth=  -1L,                # -1 significa no limitar,  por ahora lo dejo fijo
-   min_gain_to_split= 0.0,         # min_gain_to_split >= 0.0
-   min_sum_hessian_in_leaf= 0.001, #  min_sum_hessian_in_leaf >= 0.0
-   lambda_l1= 0.0,                 # lambda_l1 >= 0.0
-   lambda_l2= 0.0,                 # lambda_l2 >= 0.0
-   max_bin= 31L,                   #lo debo dejar fijo, no participa de la BO
-   num_iterations= 9999,           #un numero muy grande, lo limita early_stopping_rounds
+##Hiperparametros FIJOS de  lightgbm
+#PARAM$lgb_basicos <- list( 
+#   boosting= "gbdt",               #puede ir  dart  , ni pruebe random_forest
+#   objective= "binary",
+#   metric= "custom",
+#   first_metric_only= TRUE,
+#   boost_from_average= TRUE,
+#   feature_pre_filter= FALSE,
+#   force_row_wise= TRUE,           #para que los alumnos no se atemoricen con tantos warning
+#   verbosity= -100,
+#   max_depth=  -1L,                # -1 significa no limitar,  por ahora lo dejo fijo
+#   min_gain_to_split= 0.0,         # min_gain_to_split >= 0.0
+#   min_sum_hessian_in_leaf= 0.001, #  min_sum_hessian_in_leaf >= 0.0
+#   lambda_l1= 0.0,                 # lambda_l1 >= 0.0
+#   lambda_l2= 0.0,                 # lambda_l2 >= 0.0
+#   max_bin= 31L,                   #lo debo dejar fijo, no participa de la BO
+#  num_iterations= 9999,           #un numero muy grande, lo limita early_stopping_rounds
 
-   bagging_fraction= 1.0,          # 0.0 < bagging_fraction <= 1.0
-   pos_bagging_fraction= 1.0,      # 0.0 < pos_bagging_fraction <= 1.0
-   neg_bagging_fraction= 1.0,      # 0.0 < neg_bagging_fraction <= 1.0
-   is_unbalance=  FALSE,           # 
-   scale_pos_weight= 1.0,          # scale_pos_weight > 0.0
+#   bagging_fraction= 1.0,          # 0.0 < bagging_fraction <= 1.0
+#   pos_bagging_fraction= 1.0,      # 0.0 < pos_bagging_fraction <= 1.0
+#   neg_bagging_fraction= 1.0,      # 0.0 < neg_bagging_fraction <= 1.0
+#   is_unbalance=  FALSE,           # 
+#   scale_pos_weight= 1.0,          # scale_pos_weight > 0.0
 
-   drop_rate=  0.1,                # 0.0 < neg_bagging_fraction <= 1.0
-   max_drop= 50,                   # <=0 means no limit
-   skip_drop= 0.5,                 # 0.0 <= skip_drop <= 1.0
+#  drop_rate=  0.1,                # 0.0 < neg_bagging_fraction <= 1.0
+#   max_drop= 50,                   # <=0 means no limit
+#   skip_drop= 0.5,                 # 0.0 <= skip_drop <= 1.0
 
-   extra_trees= TRUE,             # Magic Sauce
+#   extra_trees= TRUE,             # Magic Sauce
 
-   seed=  PARAM$lgb_semilla
-   )
+#   seed=  PARAM$lgb_semilla
+#   )
 
+#Hiperparametros FIJOS de regresión logística
+PARAM$glm_basicos <- list( 
+   family= "binomial",
+   seed=  PARAM$glm_semilla
+)
 
 #Aqui se cargan los hiperparametros que se optimizan en la Bayesian Optimization
-PARAM$bo_lgb <- makeParamSet( 
-         makeNumericParam("learning_rate",    lower=    0.02, upper=     0.3),
-         makeNumericParam("feature_fraction", lower=    0.01, upper=     1.0),
-         makeIntegerParam("num_leaves",       lower=    8L,   upper=  1024L),
-         makeIntegerParam("min_data_in_leaf", lower=  100L,   upper= 50000L)
-        )
+#PARAM$bo_lgb <- makeParamSet( 
+#         makeNumericParam("learning_rate",    lower=    0.02, upper=     0.3),
+#         makeNumericParam("feature_fraction", lower=    0.01, upper=     1.0),
+#         makeIntegerParam("num_leaves",       lower=    8L,   upper=  1024L),
+#         makeIntegerParam("min_data_in_leaf", lower=  100L,   upper= 50000L)
+#)
 
+PARAM$bo_glm <- makeParamSet( 
+         makeNumericParam("cost",    lower=    0.01, upper=     10),
+         makeNumericParam("penaly", lower=    0.001, upper=     0.1),
+         makeIntegerParam("maxit", lower=  50L,   upper= 200L)
+)
 
-#si usted es ambicioso, y tiene paciencia, podria subir este valor a 100
-PARAM$bo_iteraciones  <- 50  #iteraciones de la Optimizacion Bayesiana
+##si usted es ambicioso, y tiene paciencia, podria subir este valor a 100
+PARAM$bo_iteraciones  <- 50  #iteraciones de la Optimizacion Bayesiana, un poco más de 12 horas de proceso
 
 # FIN Parametros del script
 
@@ -119,191 +133,220 @@ GLOBAL_arbol  <- 0
 GLOBAL_gan_max  <- -Inf
 vcant_optima  <- c()
 
-fganancia_lgbm_meseta  <- function( probs, datos) 
-{
-  vlabels  <- get_field(datos, "label")
-  vpesos   <- get_field(datos, "weight")
+#fganancia_lgbm_meseta  <- function( probs, datos) 
+#{
+#  vlabels  <- get_field(datos, "label")
+#  vpesos   <- get_field(datos, "weight")
 
 
-  GLOBAL_arbol  <<- GLOBAL_arbol + 1
-  tbl  <- as.data.table( list( "prob"= probs, 
-                               "gan" = ifelse( vlabels==1 & vpesos>1 , 117000, -3000 ) ) )
+#  GLOBAL_arbol  <<- GLOBAL_arbol + 1
+#  tbl  <- as.data.table( list( "prob"= probs, 
+#                               "gan" = ifelse( vlabels==1 & vpesos>1 , 117000, -3000 ) ) )
 
-  setorder( tbl, -prob )
-  tbl[ , posicion := .I ]
-  tbl[ , gan_acum :=  cumsum( gan ) ]
+#  setorder( tbl, -prob )
+#  tbl[ , posicion := .I ]
+#  tbl[ , gan_acum :=  cumsum( gan ) ]
 
-  tbl[ , gan_suavizada := frollmean( x=gan_acum, n=2001, align="center", na.rm=TRUE, hasNA= TRUE )  ]
-  gan  <- tbl[ , max(gan_suavizada, na.rm=TRUE) ]
-
-
-  pos  <- which.max( tbl[ , gan_suavizada ] ) 
-  vcant_optima  <<- c( vcant_optima, pos )
-
-  if( GLOBAL_arbol %% 10 == 0 )
-  {
-    if( gan > GLOBAL_gan_max ) GLOBAL_gan_max  <<- gan 
-
-    cat( "\r" )
-    cat( "Validate ", GLOBAL_iteracion, " " , " ", GLOBAL_arbol, "  ", gan, "   ", GLOBAL_gan_max, "   " )
-  }
+#  tbl[ , gan_suavizada := frollmean( x=gan_acum, n=2001, align="center", na.rm=TRUE, hasNA= TRUE )  ]
+#  gan  <- tbl[ , max(gan_suavizada, na.rm=TRUE) ]
 
 
-  return( list( "name"= "ganancia", 
-                "value"=  gan,
-                "higher_better"= TRUE ) )
-}
+#  pos  <- which.max( tbl[ , gan_suavizada ] ) 
+#  vcant_optima  <<- c( vcant_optima, pos )
+
+#  if( GLOBAL_arbol %% 10 == 0 )
+#  {
+#    if( gan > GLOBAL_gan_max ) GLOBAL_gan_max  <<- gan 
+
+#    cat( "\r" )
+#    cat( "Validate ", GLOBAL_iteracion, " " , " ", GLOBAL_arbol, "  ", gan, "   ", GLOBAL_gan_max, "   " )
+#  }
+
+
+#  return( list( "name"= "ganancia", 
+#                "value"=  gan,
+#                "higher_better"= TRUE ) )
+#}
 #------------------------------------------------------------------------------
 
-EstimarGanancia_lightgbm  <- function( x )
-{
-  gc()
-  GLOBAL_iteracion  <<- GLOBAL_iteracion + 1
+#EstimarGanancia_lightgbm  <- function( x )
+#{
+#  gc()
+#  GLOBAL_iteracion  <<- GLOBAL_iteracion + 1
 
-  # hago la union de los parametros basicos y los moviles que vienen en x
-  param_completo  <- c( PARAM$lgb_basicos,  x )
+#  # hago la union de los parametros basicos y los moviles que vienen en x
+#  param_completo  <- c( PARAM$lgb_basicos,  x )
 
-  param_completo$early_stopping_rounds  <- as.integer(200 + 4/param_completo$learning_rate )
+#  param_completo$early_stopping_rounds  <- as.integer(200 + 4/param_completo$learning_rate )
 
-  GLOBAL_arbol  <<- 0
-  GLOBAL_gan_max  <<- -Inf
-  vcant_optima  <<- c()
-  set.seed( PARAM$lgb_semilla )
-  modelo_train  <- lgb.train( data= dtrain,
-                              valids= list( valid= dvalidate ),
-                              eval=   fganancia_lgbm_meseta,
-                              param=  param_completo,
-                              verbose= -100 )
+#  GLOBAL_arbol  <<- 0
+#  GLOBAL_gan_max  <<- -Inf
+#  vcant_optima  <<- c()
+#  set.seed( PARAM$lgb_semilla )
+#  modelo_train  <- lgb.train( data= dtrain,
+#                              valids= list( valid= dvalidate ),
+#                              eval=   fganancia_lgbm_meseta,
+#                              param=  param_completo,
+#                              verbose= -100 )
 
-  cat( "\n" )
+#  cat( "\n" )
 
-  cant_corte  <- vcant_optima[ modelo_train$best_iter ]
+#  cant_corte  <- vcant_optima[ modelo_train$best_iter ]
 
-  #aplico el modelo a testing y calculo la ganancia
-  prediccion  <- predict( modelo_train, 
-                          data.matrix( dataset_test[ , campos_buenos, with=FALSE]) )
+#  #aplico el modelo a testing y calculo la ganancia
+#  prediccion  <- predict( modelo_train, 
+#                          data.matrix( dataset_test[ , campos_buenos, with=FALSE]) )
 
-  tbl  <- copy( dataset_test[ , list("gan" = ifelse(clase_ternaria=="BAJA+2", 117000, -3000 )) ] )
+#  tbl  <- copy( dataset_test[ , list("gan" = ifelse(clase_ternaria=="BAJA+2", 117000, -3000 )) ] )
 
-  tbl[ , prob := prediccion ]
-  setorder( tbl, -prob )
-  tbl[ , gan_acum :=  cumsum( gan ) ]
-  tbl[ , gan_suavizada :=  frollmean( x=gan_acum, n=2001, align="center", na.rm=TRUE, hasNA= TRUE )  ]
-
-
-  ganancia_test  <- tbl[ , max(gan_suavizada, na.rm=TRUE) ]
-
-  cantidad_test_normalizada  <- which.max( tbl[ , gan_suavizada ] ) 
-
-  rm( tbl )
-  gc()
-
-  ganancia_test_normalizada  <- ganancia_test
+#  tbl[ , prob := prediccion ]
+#  setorder( tbl, -prob )
+#  tbl[ , gan_acum :=  cumsum( gan ) ]
+#  tbl[ , gan_suavizada :=  frollmean( x=gan_acum, n=2001, align="center", na.rm=TRUE, hasNA= TRUE )  ]
 
 
-  #voy grabando las mejores column importance
-  if( ganancia_test_normalizada >  GLOBAL_ganancia )
-  {
-    GLOBAL_ganancia  <<- ganancia_test_normalizada
-    tb_importancia    <- as.data.table( lgb.importance( modelo_train ) )
+#  ganancia_test  <- tbl[ , max(gan_suavizada, na.rm=TRUE) ]
 
-    fwrite( tb_importancia,
-            file= paste0( "impo_", GLOBAL_iteracion, ".txt" ),
-            sep= "\t" )
+#  cantidad_test_normalizada  <- which.max( tbl[ , gan_suavizada ] ) 
 
-    rm( tb_importancia )
-  }
+#  rm( tbl )
+#  gc()
+
+#  ganancia_test_normalizada  <- ganancia_test
+
+
+ # #voy grabando las mejores column importance
+# if( ganancia_test_normalizada >  GLOBAL_ganancia )
+#  {
+#    GLOBAL_ganancia  <<- ganancia_test_normalizada
+#    tb_importancia    <- as.data.table( lgb.importance( modelo_train ) )
+
+#    fwrite( tb_importancia,
+#            file= paste0( "impo_", GLOBAL_iteracion, ".txt" ),
+#            sep= "\t" )
+
+#    rm( tb_importancia )
+#  }
 
 
   #logueo final
-  ds  <- list( "cols"= ncol(dtrain),  "rows"= nrow(dtrain) )
-  xx  <- c( ds, copy(param_completo) )
+#  ds  <- list( "cols"= ncol(dtrain),  "rows"= nrow(dtrain) )
+#  xx  <- c( ds, copy(param_completo) )
 
-  xx$early_stopping_rounds  <- NULL
-  xx$num_iterations  <- modelo_train$best_iter
-  xx$estimulos  <- cantidad_test_normalizada
-  xx$ganancia  <- ganancia_test_normalizada
-  xx$iteracion_bayesiana  <- GLOBAL_iteracion
+#  xx$early_stopping_rounds  <- NULL
+#  xx$num_iterations  <- modelo_train$best_iter
+#  xx$estimulos  <- cantidad_test_normalizada
+#  xx$ganancia  <- ganancia_test_normalizada
+#  xx$iteracion_bayesiana  <- GLOBAL_iteracion
 
-  exp_log( xx,  arch= "BO_log.txt" )
+#  exp_log( xx,  arch= "BO_log.txt" )
 
-  return( ganancia_test_normalizada )
-}
+#  return( ganancia_test_normalizada )
+#}
 #------------------------------------------------------------------------------
 #esta es la funcion mas mistica de toda la asignatura
 # sera explicada en  Laboratorio de Implementacion III
 
 vcant_optima   <- c()
 
-fganancia_lgbm_mesetaCV  <- function( probs, datos) 
-{
-  vlabels  <- get_field(datos, "label")
-  vpesos   <- get_field(datos, "weight")
+#fganancia_lgbm_mesetaCV  <- function( probs, datos) 
+#{
+#  vlabels  <- get_field(datos, "label")
+#  vpesos   <- get_field(datos, "weight")
 
-  GLOBAL_arbol  <<- GLOBAL_arbol + 1
+#  GLOBAL_arbol  <<- GLOBAL_arbol + 1
 
-  tbl  <- as.data.table( list( "prob"= probs, 
-                               "gan" = ifelse( vlabels==1 & vpesos > 1,
-                                              117000,
-                                               -3000 ) ) )
+#  tbl  <- as.data.table( list( "prob"= probs, 
+#                               "gan" = ifelse( vlabels==1 & vpesos > 1,
+#                                              117000,
+#                                               -3000 ) ) )
 
-  setorder( tbl, -prob )
-  tbl[ , posicion := .I ]
-  tbl[ , gan_acum :=  cumsum( gan ) ]
-  tbl[  , gan_suavizada :=  frollmean( x=gan_acum, n=501, align="center", na.rm=TRUE, hasNA= TRUE )  ]
+#  setorder( tbl, -prob )
+#  tbl[ , posicion := .I ]
+#  tbl[ , gan_acum :=  cumsum( gan ) ]
+#  tbl[  , gan_suavizada :=  frollmean( x=gan_acum, n=501, align="center", na.rm=TRUE, hasNA= TRUE )  ]
 
-  gan  <-  tbl[ , max(gan_suavizada, na.rm=TRUE) ]
+#  gan  <-  tbl[ , max(gan_suavizada, na.rm=TRUE) ]
 
-  pos  <- which.max(  tbl[ , gan_suavizada ] ) 
+#  pos  <- which.max(  tbl[ , gan_suavizada ] ) 
 
-  vcant_optima   <<- c( vcant_optima, pos )
+#  vcant_optima   <<- c( vcant_optima, pos )
 
-  if( GLOBAL_arbol %% (10*PARAM$lgb_crossvalidation_folds) == 0 )
-  {
-    if( gan > GLOBAL_gan_max ) GLOBAL_gan_max  <<- gan 
+  #if( GLOBAL_arbol %% (10*PARAM$lgb_crossvalidation_folds) == 0 )
+  #{
+  #  if( gan > GLOBAL_gan_max ) GLOBAL_gan_max  <<- gan 
 
-    cat( "\r" )
-    cat( "Cross Validate ", GLOBAL_iteracion, " " , " ",
-         as.integer( GLOBAL_arbol/ PARAM$lgb_crossvalidation_folds), "  ",
-         gan * PARAM$lgb_crossvalidation_folds, "   ",
-         GLOBAL_gan_max * PARAM$lgb_crossvalidation_folds, "   " )
-  }
+  #  cat( "\r" )
+  #  cat( "Cross Validate ", GLOBAL_iteracion, " " , " ",
+  #       as.integer( GLOBAL_arbol/ PARAM$lgb_crossvalidation_folds), "  ",
+  #       gan * PARAM$lgb_crossvalidation_folds, "   ",
+  #       GLOBAL_gan_max * PARAM$lgb_crossvalidation_folds, "   " )
+  #}
 
-  return( list( "name"= "ganancia", 
-                "value"=  gan,
-                "higher_better"= TRUE ) )
-}
+#  if( GLOBAL_arbol %% (10*PARAM$glm_crossvalidation_folds) == 0 )
+#  {
+#    if( gan > GLOBAL_gan_max ) GLOBAL_gan_max  <<- gan 
+
+#    cat( "\r" )
+#    cat( "Cross Validate ", GLOBAL_iteracion, " " , " ",
+#         as.integer( GLOBAL_arbol/ PARAM$glm_crossvalidation_folds), "  ",
+#         gan * PARAM$glm_crossvalidation_folds, "   ",
+#         GLOBAL_gan_max * PARAM$glm_crossvalidation_folds, "   " )
+#  }
+
+#  return( list( "name"= "ganancia", 
+#                "value"=  gan,
+#                "higher_better"= TRUE ) )
+#}
 #------------------------------------------------------------------------------
 
-EstimarGanancia_lightgbmCV  <- function( x )
+#EstimarGanancia_lightgbmCV  <- function( x )
+EstimarGanancia_glmCV  <- function( x )
 {
   gc()
   GLOBAL_iteracion  <<- GLOBAL_iteracion + 1
 
-  param_completo  <- c(PARAM$lgb_basicos,  x )
+  #param_completo  <- c(PARAM$lgb_basicos,  x )
+  param_completo  <- c(PARAM$glm_basicos,  x )
 
-  param_completo$early_stopping_rounds  <- as.integer(200 + 4/param_completo$learning_rate )
+  #param_completo$early_stopping_rounds  <- as.integer(200 + 4/param_completo$learning_rate )
 
   vcant_optima   <<- c()
   GLOBAL_arbol  <<- 0
   GLOBAL_gan_max  <<- -Inf
-  set.seed( PARAM$lgb_semilla )
-  modelocv  <- lgb.cv( data= dtrain,
-                       eval=   fganancia_lgbm_mesetaCV,
+  #set.seed( PARAM$lgb_semilla )
+  #modelocv  <- lgb.cv( data= dtrain,
+  #                     eval=   fganancia_lgbm_mesetaCV,
+  #                     param=  param_completo,
+  #                     stratified= TRUE,                   #sobre el cross validation
+  #                     nfold= PARAM$glb_crossvalidation_folds,
+  #                     verbose= -100 )
+
+  set.seed( PARAM$glm_semilla )  
+  modelocv  <- cv.glm( data= dtrain,
                        param=  param_completo,
-                       stratified= TRUE,                   #sobre el cross validation
-                       nfold= PARAM$lgb_crossvalidation_folds,
-                       verbose= -100 )
+                       k= PARAM$glm_crossvalidation_folds
+                     )
 
   cat("\n" )
 
-  desde  <- (modelocv$best_iter-1)*PARAM$lgb_crossvalidation_folds + 1
-  hasta  <- desde + PARAM$lgb_crossvalidation_folds -1
 
-  cant_corte   <-  as.integer( mean( vcant_optima[ desde:hasta ] ) * PARAM$lgb_crossvalidation_folds  )
+
+  #desde  <- (modelocv$best_iter-1)*PARAM$lgb_crossvalidation_folds + 1
+  #hasta  <- desde + PARAM$lgb_crossvalidation_folds -1
+  desde  <- (modelocv$best_iter-1)*PARAM$glm_crossvalidation_folds + 1
+  hasta  <- desde + PARAM$glm_crossvalidation_folds -1
+
+
+  #cant_corte   <-  as.integer( mean( vcant_optima[ desde:hasta ] ) * PARAM$lgb_crossvalidation_folds  )
+
+  #ganancia  <- unlist(modelocv$record_evals$valid$ganancia$eval)[ modelocv$best_iter ]
+  #ganancia_normalizada  <- ganancia * PARAM$lgb_crossvalidation_folds
+  
+  cant_corte   <-  as.integer( mean( vcant_optima[ desde:hasta ] ) * PARAM$glm_crossvalidation_folds  )
 
   ganancia  <- unlist(modelocv$record_evals$valid$ganancia$eval)[ modelocv$best_iter ]
-  ganancia_normalizada  <- ganancia * PARAM$lgb_crossvalidation_folds
+  ganancia_normalizada  <- ganancia * PARAM$glm_crossvalidation_folds
 
 
   if( ktest==TRUE )
@@ -312,9 +355,14 @@ EstimarGanancia_lightgbmCV  <- function( x )
     param_completo$early_stopping_rounds  <- NULL
     param_completo$num_iterations  <- modelocv$best_iter
 
-    modelo  <- lgb.train( data= dtrain,
-                          param=  param_completo,
-                          verbose= -100 )
+    #modelo  <- lgb.train( data= dtrain,
+    #                      param=  param_completo,
+    #                      verbose= -100 )
+    
+    modelo  <- glm.train( data= dtrain,
+                          param=  param_completo
+                        )
+
 
     #aplico el modelo a testing y calculo la ganancia
     prediccion  <- predict( modelo, 
@@ -347,12 +395,16 @@ EstimarGanancia_lightgbmCV  <- function( x )
     param_impo$early_stopping_rounds  <- 0
     param_impo$num_iterations  <- modelocv$best_iter
 
-    modelo  <- lgb.train( data= dtrain,
-                       param=  param_impo,
-                       verbose= -100 )
+    #modelo  <- lgb.train( data= dtrain,
+    #                   param=  param_impo,
+    #                   verbose= -100 )
 
-    tb_importancia  <- as.data.table( lgb.importance( modelo ) )
+    modelo  <- glm.train( data= dtrain,
+                       param=  param_impo)                    
 
+    #tb_importancia  <- as.data.table( lgb.importance( modelo ) )
+
+    tb_importancia  <- as.data.table( glm.importance( modelo ) )
     fwrite( tb_importancia,
             file= paste0( "impo_", GLOBAL_iteracion, ".txt" ),
             sep= "\t" )
@@ -467,13 +519,13 @@ if( file.exists( "BO_log.txt" ) )
 }
 
 
-#Aqui comienza la configuracion de mlrMBO
+#Aqui comienza la configuracion de mlrMBO para el proceso de optimización
 
-#deobo hacer cross validation o  Train/Validate/Test
+#debo hacer cross validation o  Train/Validate/Test
 if( kcrossvalidation ) {
-  funcion_optimizar  <- EstimarGanancia_lightgbmCV
+  funcion_optimizar  <- EstimarGanancia_glmCV
 } else {
-  funcion_optimizar  <- EstimarGanancia_lightgbm
+  #***funcion_optimizar  <- EstimarGanancia_lightgbm
 }
 
 
@@ -485,7 +537,8 @@ obj.fun  <- makeSingleObjectiveFunction(
               fn=       funcion_optimizar, #la funcion que voy a maximizar
               minimize= FALSE,   #estoy Maximizando la ganancia
               noisy=    TRUE,
-              par.set=  PARAM$bo_lgb,     #definido al comienzo del programa
+              #par.set=  PARAM$bo_lgb,     #definido al comienzo del programa
+              par.set=  PARAM$bo_glm,     #definido al comienzo del programa
               has.simple.signature = FALSE   #paso los parametros en una lista
              )
 

@@ -35,7 +35,7 @@ PARAM$experimento  <- "ZZ06920"
 PARAM$exp_input  <- "HT06510"
 
 #Atencion, que se procesan 5 modelos y cada uno con 5 semillas, ajuste a SUS necesidades
-PARAM$modelos_rank  <- c( 1, 2, 5, 10, 50 )  #Que modelos quiero, segun su posicion en el ranking #Se puede escoger los modelos por extensión
+PARAM$modelos_rank  <- c( 1, 2, 5)  #Que modelos quiero, segun su posicion en el ranking #Se puede escoger los modelos por extensión
 PARAM$semillas  <- c( 114689, 333679, 274177, 514229, 545543) #reemplazar por las propias semillas
 
 PARAM$kaggle$envios_desde  <-  8000  #Estos parámetors es posible ajustarlos para salidas de Kaggle
