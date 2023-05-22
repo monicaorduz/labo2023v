@@ -34,13 +34,15 @@ PARAM  <- list()
 PARAM$experimento  <- "ZZ06920"
 PARAM$exp_input  <- "HT06510"
 
-#Atencion, que se procesan 5 modelos y cada uno con 5 semillas, ajuste a SUS necesidades
-PARAM$modelos_rank  <- c( 1, 2, 5)  #Que modelos quiero, segun su posicion en el ranking #Se puede escoger los modelos por extensión
+#Atencion, que se procesa 1 modelo con 5 semillas, ajuste a SUS necesidades
+PARAM$modelos_rank  <- c( 1 )  #Que modelos quiero, segun su posicion en el ranking #Se puede escoger los modelos por extensión
 PARAM$semillas  <- c( 114689, 333679, 274177, 514229, 545543) #reemplazar por las propias semillas
 
-PARAM$kaggle$envios_desde  <-  8000  #Estos parámetors es posible ajustarlos para salidas de Kaggle
-PARAM$kaggle$envios_hasta  <- 13500
-PARAM$kaggle$envios_salto  <-   500
+#//***//NO APLICARÍA ESTA PARTE, YA QUE NO SE DEFINIÓ TRABAJAR CON LOS REGISTROS DEL PERÍODO 202109 DONDE LA CLASE ES DESCONOCIDA //***//
+#PARAM$kaggle$envios_desde  <-  8000  #Estos parámetors es posible ajustarlos para salidas de Kaggle
+#PARAM$kaggle$envios_hasta  <- 13500
+#PARAM$kaggle$envios_salto  <-   500
+#//***//
 
 PARAM$graficar$envios_hasta  <- 20000  #para el caso que deba graficar
 PARAM$graficar$ventana_suavizado  <- 2001
@@ -66,35 +68,12 @@ setwd(paste0( base_dir, "exp/", PARAM$experimento, "/"))   #Establezco el Workin
 write_yaml( PARAM, file= "parametros.yml" )   #escribo parametros utilizados
 
 
-## agrego a dataset_pred1  las columnas  mprestamos_totales y  umbral_prestamos
-#dataset_pred1[ dataset_grande,
-#                                  on = c("numero_de_cliente", "foto_mes"),
-#                                   c( "mprestamos_totales", "umbral_prestamos") := list( i.mprestamos_totales, i.umbral_prestamos) ]
-
-##ordeno por probabilidad descendente
-#setorder(  dataset_pred1,  -prob )  # ordeno por probabilidad descendente
-
-## marco todos en cero
-#dataset_pred1[  , Predicted := 0 ]
-
-## marco en 1 a los primeros 11000  , cambiar luego a gusto, ya está ordenado !
-#dataset_pred1[  1:11000,  Predicted := 1 ]
-
-##ahora viene el  "Engendro Marcela"  ,  donde decido NO enviar estimulo a los que deben mucho
-#dataset_pred1[  mprestamos_totales  >  3*umbrar_prestamos,  Predicted :=0 ]
-
-##finalmente, grabo a disco
-#fwrite( dataset_pred1[ , list( numero_de_cliente, Predicted ) ],
-#                file= "marcela_bola_de_cristal_11000.csv",
-#                sep= "," )
-
-
-#leo la salida de la optimizaciob bayesiana
+#leo la salida de la optimizacion bayesiana ***
 arch_log  <- paste0( base_dir, "exp/", PARAM$exp_input, "/BO_log.txt" )
 tb_log  <- fread( arch_log )
 setorder( tb_log, -ganancia )
 
-#leo el nombre del expermento de la Training Strategy
+#leo el nombre del experimento de la Training Strategy
 arch_TS  <- paste0( base_dir, "exp/", PARAM$exp_input, "/TrainingStrategy.txt" )
 TS  <- readLines( arch_TS, warn= FALSE )
 
@@ -115,15 +94,17 @@ dataset[ , clase01 := ifelse( clase_ternaria %in% c("BAJA+1","BAJA+2"), 1, 0 ) ]
 campos_buenos  <- setdiff( colnames(dataset), c( "clase_ternaria", "clase01") )
 
 
-#genero un modelo para cada uno de las modelos_qty MEJORES iteraciones de la Bayesian Optimization
+#genero un modelo para cada uno de las modelos_qty MEJORES iteraciones de la Bayesian Optimization ***
 for( modelo_rank in  PARAM$modelos_rank )
 {
   parametros  <- as.list( copy( tb_log[ modelo_rank ] ) )
   iteracion_bayesiana  <- parametros$iteracion_bayesiana
 
 
-***  #creo CADA VEZ el dataset de lightgbm
-  dtrain  <- lgb.Dataset( data=    data.matrix( dataset[ , campos_buenos, with= FALSE] ),
+ #creo CADA VEZ el dataset de lightgbm ***
+ #dtrain  <- lgb.Dataset( data=    data.matrix( dataset[ , campos_buenos, with= FALSE] ),
+ #creo CADA VEZ el dataset de la REGRESIÓN LOGÍSTICA
+  dtrain  <- glm.Dataset( data=    data.matrix( dataset[ , campos_buenos, with= FALSE] ),
                           label=   dataset[ , clase01],
                           weight=  dataset[ , ifelse( clase_ternaria %in% c("BAJA+2"), 1.0000001, 1.0)],
                           free_raw_data= FALSE
@@ -131,7 +112,7 @@ for( modelo_rank in  PARAM$modelos_rank )
 
   ganancia  <- parametros$ganancia
 
-  #elimino los parametros que no son de lightgbm
+  #elimino los parametros que no son de lightgbm ***
   parametros$experimento  <- NULL
   parametros$cols         <- NULL
   parametros$rows         <- NULL
@@ -141,7 +122,6 @@ for( modelo_rank in  PARAM$modelos_rank )
   parametros$iteracion_bayesiana  <- NULL
 
   #  parametros$num_iterations  <- 10  # esta linea es solo para pruebas en desarrollo
-
   if( future_con_clase )
   {
      tb_ganancias  <- as.data.table( list( "envios" = 1:1:PARAM$graficar$envios_hasta ) )
@@ -165,18 +145,18 @@ for( modelo_rank in  PARAM$modelos_rank )
                             nombre_raiz,
                             ".model" )
 
-    #genero el modelo entrenando en los datos finales
+    #genero el modelo entrenando en los datos finales ***OK que utilice LightGBM como METAMODELO
     set.seed( parametros$seed )
     modelo_final  <- lightgbm( data= dtrain,
                                param=  parametros,
                                verbose= -100 )
 
-    #grabo el modelo, achivo .model
-    ***lgb.save( modelo_final,
+    #grabo el modelo, achivo .model ***
+    lgb.save( modelo_final,
               file= arch_modelo )
 
-    #creo y grabo la importancia de variables
-    ***tb_importancia  <- as.data.table( lgb.importance( modelo_final ) )
+    #creo y grabo la importancia de variables ***
+    tb_importancia  <- as.data.table( lgb.importance( modelo_final ) )
     fwrite( tb_importancia,
             file= paste0( "impo_",
                           nombre_raiz,
@@ -199,36 +179,8 @@ for( modelo_rank in  PARAM$modelos_rank )
     fwrite( tb_prediccion[ ,list(numero_de_cliente, foto_mes, prob, clase_ternaria)],
             file= nom_pred,
             sep= "\t" )
-
-
-    #genero los archivos para Kaggle
-    cortes  <- seq( from=  PARAM$kaggle$envios_desde,
-                    to=    PARAM$kaggle$envios_hasta,
-                    by=    PARAM$kaggle$envios_salto )
-
-
-    setorder( tb_prediccion, -prob )
-
-    if( !future_con_clase )
-    {
-      #genero los archivos para Kaggle
-      for( corte in cortes )
-      {
-        tb_prediccion[ , Predicted := 0L ]
-        tb_prediccion[ 1:corte, Predicted := 1L ]
-
-        nom_submit  <- paste0( PARAM$experimento,
-                               "_",
-                               nombre_raiz,
-                               "_",
-                               sprintf( "%05d", corte ),
-                               ".csv" )
-
-        fwrite( tb_prediccion[ , list( numero_de_cliente, Predicted ) ],
-                file= nom_submit,
-                sep= "," )
-      }
-    }
+  
+   #//***//SI APLICARÍA ESTA PARTE, YA QUE NO SE DEFINIÓ TRABAJAR CON LOS REGISTROS DEL PERÍODO 202107 DONDE LA CLASE ES CONOCIDA //***//
 
     if( future_con_clase )
     {

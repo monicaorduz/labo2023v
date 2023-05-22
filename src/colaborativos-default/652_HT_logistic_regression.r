@@ -351,7 +351,7 @@ EstimarGanancia_glmCV  <- function( x )
 
   if( ktest==TRUE )
   {
-    #debo recrear el modelo
+    #debo recrear el modelo, num_iterations es la cantidad de árboles del ensemble
     param_completo$early_stopping_rounds  <- NULL
     param_completo$num_iterations  <- modelocv$best_iter
 
@@ -365,6 +365,7 @@ EstimarGanancia_glmCV  <- function( x )
 
 
     #aplico el modelo a testing y calculo la ganancia
+    #La ganancia contra test que se mide la utiliza la OB para guiar su búsqueda
     prediccion  <- predict( modelo, 
                             data.matrix( dataset_test[ , campos_buenos, with=FALSE]) )
 

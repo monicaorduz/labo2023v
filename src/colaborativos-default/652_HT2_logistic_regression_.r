@@ -20,8 +20,8 @@ require("yaml")
 require ("glmnet")
 
 #paquetes necesarios para la Bayesian Optimization
-require("DiceKriging")
-require("mlrMBO")
+#require("DiceKriging")
+#require("mlrMBO")
 
 #------------------------------------------------------------------------------
 options(error = function() { 
@@ -33,7 +33,7 @@ options(error = function() {
 
 #Parametros del script
 PARAM  <- list()
-PARAM$experimento <- "HT06510"
+PARAM$experimento <- "HT6520"
 
 PARAM$exp_input  <- "TS6410"
 
@@ -49,18 +49,91 @@ PARAM$glm_basicos <- list(
    seed=  PARAM$glm_semilla
 )
 
-#Aqui se cargan los hiperparametros que se optimizan en la Bayesian Optimization
+#Aqui se cargan los hiperparametros que se pueden optimizar en la Bayesian Optimization, para el caso no se hizo BO
 
-PARAM$bo_glm <- makeParamSet( 
+PARAM$glm_extras <- makeParamSet( 
          makeNumericParam("cost",    lower=    0.01, upper=     10),
          makeNumericParam("penaly", lower=    0.001, upper=     0.1),
          makeIntegerParam("maxit", lower=  50L,   upper= 200L)
+         makeIntegerParam("k", lower = PARAM$glm_crossvalidation_folds, upper=10L)
 )
 
-##si usted es ambicioso, y tiene paciencia, podria subir este valor a 100
-PARAM$bo_iteraciones  <- 50  #iteraciones de la Optimizacion Bayesiana, un poco más de 12 horas de proceso
-
 # FIN Parametros del script
+
+#------------------------------------------------------------------------------
+
+EstimarGanancia_glm  <- function( x )
+{
+  gc()
+  GLOBAL_iteracion  <<- GLOBAL_iteracion + 1
+
+  # hago la union de los parametros basicos y los moviles que vienen en x
+  param_completo  <- c( PARAM$glm_basicos,  x )
+
+  #param_completo$early_stopping_rounds  <- as.integer(200 + 4/param_completo$learning_rate )
+
+  GLOBAL_arbol  <<- 0
+  GLOBAL_gan_max  <<- -Inf
+  vcant_optima  <<- c()
+  set.seed( PARAM$glm_semilla )
+  modelo_train  <- glm.train( data= dtrain,
+                              param=  param_completo
+                            )
+
+  cat( "\n" )
+
+  cant_corte  <- vcant_optima[ modelo_train$best_iter ]
+
+  #aplico el modelo a testing y calculo la ganancia
+  prediccion  <- predict( modelo_train, 
+                          data.matrix( dataset_test[ , campos_buenos, with=FALSE]) )
+
+  tbl  <- copy( dataset_test[ , list("gan" = ifelse(clase_ternaria=="BAJA+2", 117000, -3000 )) ] )
+
+  tbl[ , prob := prediccion ]
+  setorder( tbl, -prob )
+  tbl[ , gan_acum :=  cumsum( gan ) ]
+  tbl[ , gan_suavizada :=  frollmean( x=gan_acum, n=2001, align="center", na.rm=TRUE, hasNA= TRUE )  ]
+
+
+  ganancia_test  <- tbl[ , max(gan_suavizada, na.rm=TRUE) ]
+
+  cantidad_test_normalizada  <- which.max( tbl[ , gan_suavizada ] ) 
+
+  rm( tbl )
+  gc()
+
+  ganancia_test_normalizada  <- ganancia_test
+
+
+  #voy grabando las mejores column importance
+  if( ganancia_test_normalizada >  GLOBAL_ganancia )
+  {
+    GLOBAL_ganancia  <<- ganancia_test_normalizada
+    tb_importancia    <- as.data.table( glm.importance( modelo_train ) )
+
+    fwrite( tb_importancia,
+            file= paste0( "impo_", GLOBAL_iteracion, ".txt" ),
+            sep= "\t" )
+
+    rm( tb_importancia )
+  }
+
+
+  #logueo final
+  ds  <- list( "cols"= ncol(dtrain),  "rows"= nrow(dtrain) )
+  xx  <- c( ds, copy(param_completo) )
+
+  xx$early_stopping_rounds  <- NULL
+  xx$num_iterations  <- modelo_train$best_iter
+  xx$estimulos  <- cantidad_test_normalizada
+  xx$ganancia  <- ganancia_test_normalizada
+  xx$iteracion_bayesiana  <- GLOBAL_iteracion
+
+  exp_log( xx,  arch= "BO_log.txt" )
+
+  return( ganancia_test_normalizada )
+}
 
 #------------------------------------------------------------------------------
 
@@ -69,26 +142,22 @@ EstimarGanancia_glmCV  <- function( x )
   gc()
   GLOBAL_iteracion  <<- GLOBAL_iteracion + 1
 
-  param_completo  <- c(PARAM$glm_basicos,  x )
+  param_completo  <- c(PARAM$glm_basicos, PARAM$glm_extras, x )
 
   #param_completo$early_stopping_rounds  <- as.integer(200 + 4/param_completo$learning_rate )
 
   vcant_optima   <<- c()
   GLOBAL_arbol  <<- 0
   GLOBAL_gan_max  <<- -Inf
- 
-  set.seed( PARAM$glm_semilla )  
-  modelocv  <- cv.glm( data= dtrain,
-                       param=  param_completo,
-                       k= PARAM$glm_crossvalidation_folds
+  set.seed( PARAM$glm_semilla )
+  modelocv  <- glm.cv( data= dtrain,
+                       param=  param_completo
                      )
 
   cat("\n" )
 
-
   desde  <- (modelocv$best_iter-1)*PARAM$glm_crossvalidation_folds + 1
   hasta  <- desde + PARAM$glm_crossvalidation_folds -1
-
 
   cant_corte   <-  as.integer( mean( vcant_optima[ desde:hasta ] ) * PARAM$glm_crossvalidation_folds  )
 
@@ -103,9 +172,8 @@ EstimarGanancia_glmCV  <- function( x )
     param_completo$num_iterations  <- modelocv$best_iter
 
     modelo  <- glm.train( data= dtrain,
-                          param=  param_completo
-                        )
-
+                          param=  param_completo,
+                          verbose= -100 )
 
     #aplico el modelo a testing y calculo la ganancia
     prediccion  <- predict( modelo, 
@@ -127,8 +195,6 @@ EstimarGanancia_glmCV  <- function( x )
     gc()
   }
 
-
-
   #voy grabando las mejores column importance
   if( ganancia_normalizada >  GLOBAL_ganancia )
   {
@@ -139,9 +205,11 @@ EstimarGanancia_glmCV  <- function( x )
     param_impo$num_iterations  <- modelocv$best_iter
 
     modelo  <- glm.train( data= dtrain,
-                       param=  param_impo)                    
+                       param=  param_impo,
+                       verbose= -100 )
 
     tb_importancia  <- as.data.table( glm.importance( modelo ) )
+
     fwrite( tb_importancia,
             file= paste0( "impo_", GLOBAL_iteracion, ".txt" ),
             sep= "\t" )
@@ -165,7 +233,6 @@ EstimarGanancia_glmCV  <- function( x )
   return( ganancia_normalizada )
 }
 
-#------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
 #Aqui empieza el programa
 PARAM$stat$time_start  <- format(Sys.time(), "%Y%m%d %H%M%S")
@@ -256,55 +323,15 @@ if( file.exists( "BO_log.txt" ) )
 }
 
 
-#Aqui comienza la configuracion de mlrMBO para el proceso de optimización
+#Aqui comienza la configuracion de mlrMBO
 
 #debo hacer cross validation o  Train/Validate/Test
 if( kcrossvalidation ) {
   funcion_optimizar  <- EstimarGanancia_glmCV
 } else {
-  #***funcion_optimizar  <- EstimarGanancia_lightgbm
+  funcion_optimizar  <- EstimarGanancia_glm
 }
 
-
-configureMlr( show.learner.output= FALSE)
-
-#configuro la busqueda bayesiana,  los hiperparametros que se van a optimizar
-#por favor, no desesperarse por lo complejo
-obj.fun  <- makeSingleObjectiveFunction(
-              fn=       funcion_optimizar, #la funcion que voy a maximizar
-              minimize= FALSE,   #estoy Maximizando la ganancia
-              noisy=    TRUE,
-              par.set=  PARAM$bo_glm,     #definido al comienzo del programa
-              has.simple.signature = FALSE   #paso los parametros en una lista
-             )
-
-#archivo donde se graba y cada cuantos segundos
-ctrl  <- makeMBOControl( save.on.disk.at.time= 600,  
-                         save.file.path=       "bayesiana.RDATA" )
-
-ctrl  <- setMBOControlTermination( ctrl, 
-                                   iters= PARAM$bo_iteraciones )   #cantidad de iteraciones
-
-ctrl  <- setMBOControlInfill(ctrl, crit= makeMBOInfillCritEI() )
-
-#establezco la funcion que busca el maximo
-surr.km  <- makeLearner("regr.km",
-                        predict.type= "se",
-                        covtype= "matern3_2",
-                        control= list(trace= TRUE) )
-
-
-
-#Aqui inicio la optimizacion bayesiana
-if( !file.exists( "bayesiana.RDATA" ) ) {
-
-  run  <- mbo(obj.fun, learner= surr.km, control= ctrl)
-
-} else {
-  #si ya existe el archivo RDATA, debo continuar desde el punto hasta donde llegue
-  #  usado para cuando se corta la virtual machine
-  run  <- mboContinue( "bayesiana.RDATA" )   #retomo en caso que ya exista
-}
 
 #------------------------------------------------------------------------------
 PARAM$stat$time_end  <- format(Sys.time(), "%Y%m%d %H%M%S")

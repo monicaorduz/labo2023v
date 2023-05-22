@@ -141,7 +141,7 @@ for( modelo_rank in  PARAM$modelos_rank )
                             nombre_raiz,
                             ".model" )
 
-    #genero el modelo entrenando en los datos finales
+    #genero el modelo entrenando en los datos finales 
     set.seed( parametros$seed )
     modelo_final  <- lightgbm( data= dtrain,
                                param=  parametros,
@@ -177,35 +177,58 @@ for( modelo_rank in  PARAM$modelos_rank )
             sep= "\t" )
 
 
-    #genero los archivos para Kaggle
-    cortes  <- seq( from=  PARAM$kaggle$envios_desde,
-                    to=    PARAM$kaggle$envios_hasta,
-                    by=    PARAM$kaggle$envios_salto )
+   #genero los archivos para Kaggle
+   #//***//NO APLICARÍA ESTA PARTE, YA QUE NO SE DEFINIÓ TRABAJAR CON LOS REGISTROS DEL PERÍODO 202109 DONDE LA CLASE ES DESCONOCIDA //***//
+   #  cortes  <- seq( from=  PARAM$kaggle$envios_desde,
+   #                  to=    PARAM$kaggle$envios_hasta,
+   #                  by=    PARAM$kaggle$envios_salto )
 
 
-    setorder( tb_prediccion, -prob )
+   #  setorder( tb_prediccion, -prob )
 
-    if( !future_con_clase )
-    {
-      #genero los archivos para Kaggle
-      for( corte in cortes )
-      {
-        tb_prediccion[ , Predicted := 0L ]
-        tb_prediccion[ 1:corte, Predicted := 1L ]
+   #  if( !future_con_clase )
+   #  {
+   #    #genero los archivos para Kaggle
+   #    for( corte in cortes )
+   #    {
+   #      tb_prediccion[ , Predicted := 0L ]
+   #      tb_prediccion[ 1:corte, Predicted := 1L ]
 
-        nom_submit  <- paste0( PARAM$experimento,
-                               "_",
-                               nombre_raiz,
-                               "_",
-                               sprintf( "%05d", corte ),
-                               ".csv" )
+   #      nom_submit  <- paste0( PARAM$experimento,
+   #                             "_",
+   #                             nombre_raiz,
+   #                             "_",
+   #                             sprintf( "%05d", corte ),
+   #                             ".csv" )
 
-        fwrite( tb_prediccion[ , list( numero_de_cliente, Predicted ) ],
-                file= nom_submit,
-                sep= "," )
-      }
-    }
+   #      fwrite( tb_prediccion[ , list( numero_de_cliente, Predicted ) ],
+   #              file= nom_submit,
+   #              sep= "," )
+   #    }
+   #  }
 
+   ##//*// Caso Análisis de variables, agrego a dataset_pred1  las columnas  mprestamos_totales y  umbral_prestamos 
+   #dataset_pred1[ dataset_grande,
+   #                                  on = c("numero_de_cliente", "foto_mes"),
+   #                                   c( "mprestamos_totales", "umbral_prestamos") := list( i.mprestamos_totales, i.umbral_prestamos) ]
+
+   ##ordeno por probabilidad descendente
+   #setorder(  dataset_pred1,  -prob )  # ordeno por probabilidad descendente
+
+   ## marco todos en cero
+   #dataset_pred1[  , Predicted := 0 ]
+
+   ## marco en 1 a los primeros 8000  , cambiar luego a gusto, ya está ordenado !
+   #dataset_pred1[  1:8000,  Predicted := 1 ]
+
+   
+   ##finalmente, grabo a disco
+   #fwrite( dataset_pred1[ , list( numero_de_cliente, Predicted ) ],
+   #                file= "pred_01_017_8000.csv",
+   #                sep= "," )
+   ##//*//
+
+   #//***//SI APLICARÍA ESTA PARTE, YA QUE NO SE DEFINIÓ TRABAJAR CON LOS REGISTROS DEL PERÍODO 202107 DONDE LA CLASE ES CONOCIDA //***//
     if( future_con_clase )
     {
       tb_prediccion[ , ganancia_acum := cumsum( ifelse(clase_ternaria== "BAJA+2", 117000, -3000)) ]

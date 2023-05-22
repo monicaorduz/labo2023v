@@ -206,6 +206,31 @@ for( modelo_rank in  PARAM$modelos_rank )
       }
     }
 
+    ##//*// Caso Análisis de variables Marcela, agrego a dataset_pred1  las columnas  mprestamos_totales y  umbral_prestamos 
+   #dataset_pred1[ dataset_grande,
+   #                                  on = c("numero_de_cliente", "foto_mes"),
+   #                                   c( "mprestamos_totales", "umbral_prestamos") := list( i.mprestamos_totales, i.umbral_prestamos) ]
+
+   ##ordeno por probabilidad descendente
+   #setorder(  dataset_pred1,  -prob )  # ordeno por probabilidad descendente
+
+   ## marco todos en cero
+   #dataset_pred1[  , Predicted := 0 ]
+
+   ## marco en 1 a los primeros 11000  , cambiar luego a gusto, ya está ordenado !
+   #dataset_pred1[  1:11000,  Predicted := 1 ]
+
+   ##ahora viene el  "Engendro Marcela"  ,  donde decido NO enviar estimulo a los que deben mucho
+   #dataset_pred1[  mprestamos_totales  >  3*umbrar_prestamos,  Predicted :=0 ]
+
+   ##finalmente, grabo a disco
+   #fwrite( dataset_pred1[ , list( numero_de_cliente, Predicted ) ],
+   #                file= "marcela_bola_de_cristal_11000.csv",
+   #                sep= "," )
+   ##//*//
+
+   #//***//SI APLICARÍA ESTA PARTE, YA QUE NO SE DEFINIÓ TRABAJAR CON LOS REGISTROS DEL PERÍODO 202107 DONDE LA CLASE ES CONOCIDA //***//
+
     if( future_con_clase )
     {
       tb_prediccion[ , ganancia_acum := cumsum( ifelse(clase_ternaria== "BAJA+2", 117000, -3000)) ]

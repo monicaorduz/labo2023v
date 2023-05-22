@@ -22,13 +22,14 @@ PARAM$exp_input  <- "FE6310"
 
 # me salteo los meses duros de pandemia, pero llego hasta 201907 en training
 # entreno en 18 meses
-
+# entrene final de ensemble con dos particiones: future y final_train; se aplica el modelo final a los datos de future
 PARAM$future       <- c( 202107 )
 PARAM$final_train  <- c( 202105, 202104, 202103, 202102, 202101, 202012, 202011, 202010, 202009, 202008, 202002, 202001, 201912, 201911, 201910, 201909, 201908, 201907 )
 
+#particiones para entrenamiento, validación y testeo, de no ser así todo se iría por decisión de cross validation
 PARAM$train$training     <- c( 202103, 202102, 202101, 202012, 202011, 202010, 202009, 202008, 202002, 202001, 201912, 201911, 201910, 201909, 201908, 201907, 201906, 201905 )
 PARAM$train$validation   <- c( 202104 )
-PARAM$train$testing      <- c( 202105 )
+PARAM$train$testing      <- c( 202105 )  #un experimento adicional es ¿cómo afecta un testing en dos o más meses?
 
 # Atencion  0.4  de  undersampling de la clase mayoritaria,  los CONTINUA
 PARAM$train$undersampling  <- 0.4   # 1.0 significa NO undersampling ,  0.1  es quedarse con el 10% de los CONTINUA
@@ -83,6 +84,11 @@ fwrite( dataset[ foto_mes %in% PARAM$final_train, ],
 
 
 #grabo los datos donde voy a hacer la optimizacion de hiperparametros
+#La Optimización Bayesiana (OB) consiste en la construcción de decenas de modelos con distintos hiperparámetros
+#En esta etapa los datos de training pueden tener undersampling de la clase mayoritaria "CONTINUA"; 
+#es decir, se pueden samplear por tener el 98,58% de los registros, las demás clases no se samplean 
+#el mes que se usa para validation, ni el que usa para testing tienen undersampling, estos se utilizan completos
+
 set.seed( PARAM$train$semilla )
 dataset[ foto_mes %in% PARAM$train$training , azar := runif( nrow(dataset[foto_mes %in% PARAM$train$training ]) ) ]
 
