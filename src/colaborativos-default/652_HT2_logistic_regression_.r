@@ -20,8 +20,8 @@ require("yaml")
 require ("glmnet")
 
 #paquetes necesarios para la Bayesian Optimization
-#require("DiceKriging")
-#require("mlrMBO")
+require("DiceKriging")
+require("mlrMBO")
 
 #------------------------------------------------------------------------------
 options(error = function() { 
@@ -270,7 +270,7 @@ dataset[  , clase01 := ifelse( clase_ternaria=="CONTINUA", 0L, 1L ) ]
 campos_buenos  <- setdiff( copy(colnames( dataset )), c( "clase01", "clase_ternaria", "fold_train", "fold_validate", "fold_test" ) )
 
 #la particion de train siempre va
-dtrain  <- glm.Dataset( data=    data.matrix( dataset[ fold_train==1, campos_buenos, with=FALSE] ),
+dtrain  <-  lgb.Dataset ( data=    data.matrix( dataset[ fold_train==1, campos_buenos, with=FALSE] ),
                         label=   dataset[ fold_train==1, clase01 ],
                         weight=  dataset[ fold_train==1, ifelse( clase_ternaria == "BAJA+2", 1.0000001, 
                                                                  ifelse( clase_ternaria == "BAJA+1", 1.0, 1.0) )],
@@ -287,7 +287,7 @@ if( dataset[ fold_train==0 & fold_test==0 & fold_validate==1, .N ] > 0 )
 {
   kcrossvalidation  <- FALSE
   kvalidate  <- TRUE
-  dvalidate  <- glm.Dataset( data=  data.matrix( dataset[ fold_validate==1, campos_buenos, with=FALSE] ),
+  dvalidate  <- lgb.Dataset( data=  data.matrix( dataset[ fold_validate==1, campos_buenos, with=FALSE] ),
                              label= dataset[ fold_validate==1, clase01 ],
                              weight= dataset[ fold_validate==1, ifelse( clase_ternaria == "BAJA+2", 1.0000001, 
                                                                      ifelse( clase_ternaria == "BAJA+1", 1.0, 1.0) )],
