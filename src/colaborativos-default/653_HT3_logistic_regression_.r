@@ -19,7 +19,7 @@ require("yaml")
 #require("lightgbm")
 require ("glmnet")
 require ("caret")
-require ("caretensemble")
+#require ("caretensemble")
 require ("ggplot2")
 
 #paquetes necesarios para la Bayesian Optimization
@@ -40,7 +40,7 @@ PARAM$experimento <- "HT6530"
 
 PARAM$exp_input  <- "TS6410"
 
-PARAM$glm_crossvalidation_folds  <- 5L  #En caso que se haga cross validation, se usa esta cantidad de folds
+PARAM$glm_crossvalidation_folds  <- 5  #En caso que se haga cross validation, se usa esta cantidad de folds
 
 PARAM$glm_semilla  <- 114689   #cambiar por su propia semilla
 
@@ -49,17 +49,18 @@ PARAM$glm_semilla  <- 114689   #cambiar por su propia semilla
 #Hiperparametros FIJOS de regresión logística
 PARAM$glm_basicos <- list( 
    family= "binomial",
-   seed=  PARAM$glm_semilla
+   seed=  PARAM$glm_semilla,
+   k= PARAM$glm_crossvalidation_folds
 )
 
 #Aqui se cargan los hiperparametros que se pueden optimizar en la Bayesian Optimization, para el caso no se hizo BO
 
-PARAM$glm_extras <- makeParamSet( 
-         makeNumericParam("cost",    lower=    0.01, upper=     10),
-         makeNumericParam("penaly", lower=    0.001, upper=     0.1),
-         makeIntegerParam("maxit", lower=  50L,   upper= 200L),
-         makeIntegerParam("k", lower = PARAM$glm_crossvalidation_folds, upper=10L)
-)
+#PARAM$glm_extras <- makeParamSet( 
+#        makeNumericParam("cost",    lower=    0.01, upper=     10),
+#         makeNumericParam("penaly", lower=    0.001, upper=     0.1),
+#         makeIntegerParam("maxit", lower=  50L,   upper= 200L),
+#         makeIntegerParam("k", lower = PARAM$glm_crossvalidation_folds, upper=10L)
+#)
 
 # FIN Parametros del script
 
@@ -77,7 +78,7 @@ setwd("~/buckets/b1/")
 dataset_input  <- paste0( "./exp/", PARAM$exp_input, "/dataset_training.csv.gz" )
 dataset  <- fread( dataset_input )
 
-dataset[ , azar :=  NULL ]
+#dataset[ , azar :=  NULL ]
 
 #Verificaciones
 if( ! ("fold_train"    %in% colnames(dataset) ) ) stop("Error, el dataset no tiene el campo fold_train \n")
@@ -104,11 +105,14 @@ campos_buenos  <- setdiff( copy(colnames( dataset )), c( "clase01", "clase_terna
 
 
 #//*************//#//*************//
-
+  #str(dataset)
+  dataset$clase_ternaria<- as.factor(dataset$clase_ternaria)
   set.seed( PARAM$glm_semilla )
   modelo_glm_train  <- train(clase_ternaria ~ numero_de_cliente + foto_mes,
                             data= dataset,
                             method = "glm",
+                            weights=  dataset[ fold_train==1, ifelse( clase_ternaria == "BAJA+2", 1.0000001, 
+                                                                 ifelse( clase_ternaria == "BAJA+1", 1.0, 0.0) )],)
                             trControl= trainControl(
                                 method = "cv",
                                 number = 6,
