@@ -106,22 +106,36 @@ campos_buenos  <- setdiff( copy(colnames( dataset )), c( "clase01", "clase_terna
 
 #//*************//#//*************//
   #str(dataset)
-  dataset$clase_ternaria<- as.factor(dataset$clase_ternaria)
+  #dataset$clase_ternaria<- as.factor(dataset$clase_ternaria)
+  dataset$clase_ternaria<- ifelse( dataset$clase_ternaria == "BAJA+2", 1.0000001, 
+        ifelse( dataset$clase_ternaria == "BAJA+1", 1.0, 0.0) )
   set.seed( PARAM$glm_semilla )
-  modelo_glm_train  <- train(clase_ternaria ~ numero_de_cliente + foto_mes,
-                            data= dataset,
-                            method = "glm",
-                            weights=  dataset[ fold_train==1, ifelse( clase_ternaria == "BAJA+2", 1.0000001, 
-                                                                 ifelse( clase_ternaria == "BAJA+1", 1.0, 0.0) )],)
-                            trControl= trainControl(
-                                method = "cv",
-                                number = 6,
-                                summaryFunction = twoClassSummary,
-                                classProbs = TRUE,
-                                verboseIter = TRUE
-                                )
-                            )
-  modelo_glm_train
+ # modelo_glm_train  <- train(clase_ternaria ~ numero_de_cliente + foto_mes,
+ #                            data= dataset,
+ #                            method = "glm",
+ #                            #weights=  ,
+ #                            trControl= trainControl(
+ #                               method = "cv",
+ #                                number = 6,
+ #                                summaryFunction = twoClassSummary,
+ #                                classProbs = TRUE,
+ #                                verboseIter = TRUE
+ #                                )
+ #                            )
+ 
+  
+  
+  dtrain<-dataset[ fold_train==1, campos_buenos, with=FALSE] 
+    
+  set.seed( PARAM$glm_semilla )
+  # modelo_glm_train  <- glm( data= dtrain,
+  #                           param=  PARAM$glm_basicos
+  #                        )
+    
+  modelo_glm_train  <- glm( data= dtrain,
+                            family= "binomial"
+                          )
+  
   modelo_glm_test <- dataset[-modelo_glm_train]
   modelo_glm_test
 
