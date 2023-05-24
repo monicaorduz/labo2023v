@@ -42,8 +42,11 @@ PARAM$exp_input  <- "TS6410"
 
 PARAM$glm_crossvalidation_folds  <- 5  #En caso que se haga cross validation, se usa esta cantidad de folds
 
-PARAM$glm_semilla  <- 114689   #cambiar por su propia semilla
-
+PARAM$glm_semilla1  <- 114689   #cambiar por su propia semilla
+PARAM$glm_semilla2  <- 333679   #cambiar por su propia semilla
+PARAM$glm_semilla3  <- 274177   #cambiar por su propia semilla
+PARAM$glm_semilla4  <- 514229   #cambiar por su propia semilla
+PARAM$glm_semilla5  <- 545543   #cambiar por su propia semilla
 
 
 #Hiperparametros FIJOS de regresión logística
@@ -109,45 +112,150 @@ campos_buenos  <- setdiff( copy(colnames( dataset )), c( "clase01", "clase_terna
   #dataset$clase_ternaria<- as.factor(dataset$clase_ternaria)
   dataset$clase_ternaria<- ifelse( dataset$clase_ternaria == "BAJA+2", 1.0000001, 
         ifelse( dataset$clase_ternaria == "BAJA+1", 1.0, 0.0) )
-  set.seed( PARAM$glm_semilla )
- # modelo_glm_train  <- train(clase_ternaria ~ numero_de_cliente + foto_mes,
- #                            data= dataset,
- #                            method = "glm",
- #                            #weights=  ,
- #                            trControl= trainControl(
- #                               method = "cv",
- #                                number = 6,
- #                                summaryFunction = twoClassSummary,
- #                                classProbs = TRUE,
- #                                verboseIter = TRUE
- #                                )
- #                            )
  
-  
-  
-  dtrain<-dataset[ fold_train==1, campos_buenos, with=FALSE] 
-    
-  set.seed( PARAM$glm_semilla )
-  # modelo_glm_train  <- glm( data= dtrain,
-  #                           param=  PARAM$glm_basicos
-  #                        )
-    
-  modelo_glm_train  <- glm( data= dtrain,
-                            family= "binomial"
-                          )
-  
-  modelo_glm_test <- dataset[-modelo_glm_train]
-  modelo_glm_test
 
-  table(modelo_glm_train$clase_ternaria)  %>% prop.table()
-  nrow(modelo_glm_train)
-  table(modelo_glm_test$clase_ternaria)  %>% prop.table()
-  nrow(modelo_glm_test)
+dtrain<-dataset[ fold_train==1]
+dtest<-dataset[fold_test==1]
+dtest2<-dataset[ !fold_train==1]
 
-  prediccion<-predict(modelo_glm_test, type="response")
-  prediccion_clase <- ifelse(p>0.025, 1, 0)
-  confusionMatrix(prediccion_clase, modelo_glm_test$clase_ternaria)
-  colAUC(p,modelo_glm_test$clase_ternaria, plotROC)
+set.seed( PARAM$glm_semilla1)  
+modelo_glm  <- glm(clase01~numero_de_cliente + foto_mes, data= dtrain,
+                  family= "binomial"
+  )
+confint(object = modelo_glm, level = 0.95 )
+  
+modelo_glm2  <- glm(clase01~foto_mes, data= dtrain,
+                     family= "binomial"
+  )
+
+  
+plot(clase01 ~ foto_mes, dataset, col = "darkblue",
+       main = "Modelo regresión logística",
+       ylab = "P(bajas=1|foto_mes)",
+       xlab = "foto_mes", pch = "I")
+  
+# type = "response" devuelve las predicciones en forma de probabilidad en lugar de en log_ODDs
+curve(predict(modelo_glm2, data.frame(foto_mes = x), type = "response"),
+        col = "firebrick", lwd = 2.5, add = TRUE)
+
+# Predicciones de los nuevos puntos según el modelo. 
+# Si se indica se.fit = TRUE se devuelve el error estándar de cada predicción
+# junto con el valor de la predicción (fit).
+#predicciones <- predict(modelo_glm2, data.frame(foto_mes=dataset$foto_mes), se.fit = TRUE)
+#prediccion <- predict(modelo_glm2, list(foto_mes=dtest$foto_mes), type="response",se.fit = TRUE)
+   prediccion1 <- predict(modelo_glm2, list(foto_mes=dtest$foto_mes), type="response",
+                           se.fit = TRUE)
+   
+   prediccion_p<-prediccion1
+
+   tb_prediccion1  <- dtest[ , list( numero_de_cliente, foto_mes, clase_ternaria ) ]
+   
+   tb_prediccion1[ , prob := prediccion_p$fit]
+
+# También mediante la función logit se transforman los log_ODDs a probabilidades.
+predicciones_logit <- exp(predicciones$fit) / (1 + exp(predicciones$fit))
+
+#probabilidades <- predict(modelo_glm2, data.frame(foto_mes=dataset$foto_mes), type="response", se.fit = TRUE)
+#prob_predic <- predict(modelo_glm2, data.matrix(dtest), type="response", se.fit = TRUE)
+#predic <- predict(modelo_glm2, data.matrix(dtest[_, campos_buenos, with= FALSE ], type="response", se.fit = TRUE))
+  
+
+set.seed( PARAM$glm_semilla2)  
+modelo_glm_s2  <- glm(clase01~foto_mes, data= dtrain,
+                     family= "binomial"
+  )
+
+set.seed( PARAM$glm_semilla3)  
+modelo_glm_s3  <- glm(clase01~foto_mes, data= dtrain,
+                     family= "binomial"
+  )
+
+set.seed( PARAM$glm_semilla4)  
+modelo_glm_s4  <- glm(clase01~foto_mes, data= dtrain,
+                     family= "binomial"
+  )
+
+set.seed( PARAM$glm_semilla5)  
+modelo_glm_s5  <- glm(clase01~foto_mes, data= dtrain,
+                     family= "binomial"
+  )
+
+
+  prediccion2 <- predict(modelo_glm_s2, list(foto_mes=dtest$foto_mes), type="response",
+                         se.fit = TRUE)
+  prediccion_p<-prediccion2
+  tb_prediccion2  <- dtest[ , list( numero_de_cliente, foto_mes, clase_ternaria ) ]
+  tb_prediccion2[ , prob := prediccion_p$fit]
+
+  prediccion3 <- predict(modelo_glm_s3, list(foto_mes=dtest$foto_mes), type="response",
+                         se.fit = TRUE)
+  prediccion_p<-prediccion3
+  tb_prediccion3  <- dtest[ , list( numero_de_cliente, foto_mes, clase_ternaria ) ]
+  tb_prediccion3[ , prob := prediccion_p$fit]
+
+  prediccion4 <- predict(modelo_glm_s4, list(foto_mes=dtest$foto_mes), type="response",
+                         se.fit = TRUE)
+  prediccion_p<-prediccion4
+  tb_prediccion4  <- dtest[ , list( numero_de_cliente, foto_mes, clase_ternaria ) ]
+  tb_prediccion4[ , prob := prediccion_p$fit]
+
+  prediccion5 <- predict(modelo_glm_s5, list(foto_mes=dtest$foto_mes), type="response",
+                         se.fit = TRUE)
+  prediccion_p<-prediccion5
+  tb_prediccion5  <- dtest[ , list( numero_de_cliente, foto_mes, clase_ternaria ) ]
+  tb_prediccion5[ , prob := prediccion_p$fit]
+
+
+
+  #Guardar archivos
+  
+  nom_pred  <- paste0( "pred1_",
+                       "regresion lineal",
+                       ".csv"  )
+  
+  fwrite( tb_prediccion[ ,list(numero_de_cliente, foto_mes, prob, clase_ternaria)],
+          file= nom_pred,
+          sep= "\t" )
+  
+  nom_pred  <- paste0( "pred2_",
+                       "regresion lineal",
+                       ".csv"  )
+  
+  fwrite( tb_prediccion2[ ,list(numero_de_cliente, foto_mes, prob, clase_ternaria)],
+          file= nom_pred,
+          sep= "\t" )
+   
+  nom_pred  <- paste0( "pred3_",
+                       "regresion lineal",
+                       ".csv"  )
+  
+  fwrite( tb_prediccion3[ ,list(numero_de_cliente, foto_mes, prob, clase_ternaria)],
+          file= nom_pred,
+          sep= "\t" )
+  
+  nom_pred  <- paste0( "pred4_",
+                       "regresion lineal",
+                       ".csv"  )
+  
+  fwrite( tb_prediccion4[ ,list(numero_de_cliente, foto_mes, prob, clase_ternaria)],
+          file= nom_pred,
+          sep= "\t" )
+  
+  nom_pred  <- paste0( "pred5",
+                       "regresion lineal",
+                       ".csv"  )
+  
+  fwrite( tb_prediccion[ ,list(numero_de_cliente, foto_mes, prob, clase_ternaria)],
+          file= nom_pred,
+          sep= "\t" )
+
+
+  
+  
+#  prediccion<-predict(modelo_glm_test, type="response")
+#  prediccion_clase <- ifelse(p>0.025, 1, 0)
+#  confusionMatrix(prediccion_clase, modelo_glm_test$clase_ternaria)
+#  colAUC(p,modelo_glm_test$clase_ternaria, plotROC)
 
     
  #set.seed( PARAM$glm_semilla )
