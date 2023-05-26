@@ -58,7 +58,7 @@ PARAM$RandomForest$semilla  <- 114689    # cambiar por la propia semilla
 
 PARAM$CanaritosAsesinos$ratio  <- 0.2        #varia de 0.0 a 2.0, si es 0.0 NO se activan
 PARAM$CanaritosAsesinos$desvios  <- 7.0      #desvios estandar de la media, para el cutoff
-PARAM$CanaritosAsesinos$semilla  <- 114689   # cambiar por la propia semilla
+PARAM$CanaritosAsesinos$semilla  <- 333679   # cambiar por la propia segunda semilla
 
 PARAM$home  <- "~/buckets/b1/"
 # FIN Parametros del script
