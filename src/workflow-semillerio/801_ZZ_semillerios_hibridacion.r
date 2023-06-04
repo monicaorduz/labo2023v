@@ -24,10 +24,10 @@ require("lightgbm")
 PARAM  <- list()
 PARAM$experimento  <- "HB8010"
 
-PARAM$exp_input  <- c( "ZZ7990-01", "ZZ7990-66", "ZZ7990-53", "ZZ7990-52" )  # el inpput deben ser semillerios
+PARAM$exp_input  <- c( "ZZ7990-01", "ZZ7990-02" )  # el inpput deben ser semillerios
 
-PARAM$kaggle$envios_desde  <-  9500L  #cambió el corte inicial respecto a los demás ejercicios de ensembles
-PARAM$kaggle$envios_hasta  <- 11500L  #cambió el corte final respecto a los demás ejercicios de ensembles
+PARAM$kaggle$envios_desde  <-  10000L  #cambió el corte inicial respecto a los demás ejercicios de ensembles
+PARAM$kaggle$envios_hasta  <- 12000L  #cambió el corte final respecto a los demás ejercicios de ensembles
 PARAM$kaggle$envios_salto  <-   500L
 
 PARAM$graficar$envios_hasta  <- 20000L  #para el caso que deba graficar
